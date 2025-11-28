@@ -1,0 +1,45 @@
+.staffing-tab {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.stat-sub {
+  font-size: 13px;
+  color: #10b981;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.staff-type-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #dbeafe;
+  color: #2563eb;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.shift-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.shift-morning {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.shift-evening {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.shift-night {
+  background: #e0e7ff;
+  color: #4f46e5;
+}

@@ -1,0 +1,99 @@
+.bed-capacity-tab {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.capacity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.capacity-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.capacity-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.capacity-card.critical {
+  border-color: #fee2e2;
+  background: #fef2f2;
+}
+
+.capacity-card.warning {
+  border-color: #fef3c7;
+  background: #fffbeb;
+}
+
+.capacity-card.success {
+  border-color: #d1fae5;
+  background: #f0fdf4;
+}
+
+.capacity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.capacity-ward {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  text-transform: capitalize;
+  margin: 0;
+}
+
+.capacity-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.capacity-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.capacity-stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.capacity-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.capacity-stat-value.available {
+  color: #10b981;
+}
+
+.capacity-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.capacity-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #f59e0b 70%, #ef4444 85%);
+  transition: width 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .capacity-grid {
+    grid-template-columns: 1fr;
+  }
+}
