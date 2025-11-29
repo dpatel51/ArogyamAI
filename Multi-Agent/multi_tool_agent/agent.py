@@ -1,4 +1,9 @@
+import json
 import os
+
+import joblib
+import numpy as np
+import pandas as pd
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams, StdioServerParameters
 from google.adk.agents import Agent, LlmAgent
@@ -84,493 +89,336 @@ def get_historical_data(month: Optional[int] = None, disease_type: Optional[str]
     Returns:
         Dictionary containing historical surge patterns with festivals, diseases, and patient counts.
     """
-    
-    # Comprehensive historical data for all 12 months
-    historical_data = {
-        1: {  # January
-            "month": "January",
-            "festivals": ["Makar Sankranti", "Republic Day", "Pongal"],
-            "average_aqi": 280,
-            "baseline_patients": 450,
-            "surge_data": [
-                {
-                    "disease_category": "respiratory",
-                    "conditions": ["Asthma", "Bronchitis", "COPD", "Pneumonia"],
-                    "patient_count": 680,
-                    "icu_admissions": 85,
-                    "oxygen_cylinders_used": 210,
-                    "primary_cause": "Winter pollution + fog + crop burning residue"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Road accidents", "Burns", "Fractures"],
-                    "patient_count": 120,
-                    "icu_admissions": 30,
-                    "primary_cause": "Makar Sankranti kite flying accidents, Republic Day gatherings"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Food poisoning", "Diarrhea"],
-                    "patient_count": 95,
-                    "icu_admissions": 8,
-                    "primary_cause": "Festival food consumption at large gatherings"
-                }
-            ],
-            "total_surge_patients": 895,
-            "notes": "Severe winter pollution in North India. Delhi/NCR hospitals most affected."
-        },
-        
-        2: {  # February
-            "month": "February",
-            "festivals": ["Maha Shivaratri"],
-            "average_aqi": 220,
-            "baseline_patients": 420,
-            "surge_data": [
-                {
-                    "disease_category": "respiratory",
-                    "conditions": ["Bronchitis", "Cold", "Flu"],
-                    "patient_count": 540,
-                    "icu_admissions": 45,
-                    "oxygen_cylinders_used": 120,
-                    "primary_cause": "Lingering winter pollution, temperature fluctuations"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Gastroenteritis", "Food poisoning"],
-                    "patient_count": 110,
-                    "icu_admissions": 12,
-                    "primary_cause": "Fasting during Maha Shivaratri followed by heavy meals"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Slip and fall", "Crowd-related injuries"],
-                    "patient_count": 65,
-                    "icu_admissions": 8,
-                    "primary_cause": "Temple crowd during night-long Shivaratri prayers"
-                }
-            ],
-            "total_surge_patients": 715,
-            "notes": "Moderate surge. Air quality improving but still problematic."
-        },
-        
-        3: {  # March
-            "month": "March",
-            "festivals": ["Holi"],
-            "average_aqi": 180,
-            "baseline_patients": 400,
-            "surge_data": [
-                {
-                    "disease_category": "respiratory",
-                    "conditions": ["Allergic reactions", "Asthma attacks", "Eye infections"],
-                    "patient_count": 520,
-                    "icu_admissions": 35,
-                    "oxygen_cylinders_used": 90,
-                    "primary_cause": "Holi colors (chemical irritants), dust, smoke from bonfires"
-                },
-                {
-                    "disease_category": "skin",
-                    "conditions": ["Chemical burns", "Allergic dermatitis", "Rashes"],
-                    "patient_count": 280,
-                    "icu_admissions": 15,
-                    "primary_cause": "Toxic colors, prolonged skin exposure during Holi"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Alcohol poisoning", "Road accidents", "Assault"],
-                    "patient_count": 145,
-                    "icu_admissions": 38,
-                    "primary_cause": "Holi celebrations, intoxication-related incidents"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Food poisoning", "Alcohol-related issues"],
-                    "patient_count": 130,
-                    "icu_admissions": 18,
-                    "primary_cause": "Festival food, bhang consumption"
-                }
-            ],
-            "total_surge_patients": 1075,
-            "notes": "HIGH ALERT: Holi causes multi-category surge. Prepare dermatology and toxicology."
-        },
-        
-        4: {  # April
-            "month": "April",
-            "festivals": ["Rama Navami", "Hanuman Jayanti", "Good Friday"],
-            "average_aqi": 150,
-            "baseline_patients": 380,
-            "surge_data": [
-                {
-                    "disease_category": "heat_related",
-                    "conditions": ["Heat stroke", "Dehydration", "Heat exhaustion"],
-                    "patient_count": 210,
-                    "icu_admissions": 28,
-                    "primary_cause": "Rising summer temperatures (35-42°C), outdoor religious processions"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Food poisoning", "Diarrhea"],
-                    "patient_count": 145,
-                    "icu_admissions": 15,
-                    "primary_cause": "Food spoilage in heat, festival prasad distribution"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Crowd crushes", "Stampedes"],
-                    "patient_count": 85,
-                    "icu_admissions": 22,
-                    "primary_cause": "Large temple gatherings for Rama Navami processions"
-                }
-            ],
-            "total_surge_patients": 440,
-            "notes": "Summer onset. Hydration and heat management critical."
-        },
-        
-        5: {  # May
-            "month": "May",
-            "festivals": ["Buddha Purnima"],
-            "average_aqi": 140,
-            "baseline_patients": 360,
-            "surge_data": [
-                {
-                    "disease_category": "heat_related",
-                    "conditions": ["Heat stroke", "Severe dehydration"],
-                    "patient_count": 295,
-                    "icu_admissions": 45,
-                    "primary_cause": "Peak summer heat (40-48°C in some regions)"
-                },
-                {
-                    "disease_category": "infectious",
-                    "conditions": ["Viral fever", "Chickenpox", "Measles"],
-                    "patient_count": 165,
-                    "icu_admissions": 18,
-                    "primary_cause": "Pre-monsoon infections, school summer season"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Acute gastroenteritis", "Food poisoning"],
-                    "patient_count": 120,
-                    "icu_admissions": 10,
-                    "primary_cause": "Bacterial growth in food due to extreme heat"
-                }
-            ],
-            "total_surge_patients": 580,
-            "notes": "Peak summer. Prepare for heat-related emergencies."
-        },
-        
-        6: {  # June
-            "month": "June",
-            "festivals": ["Eid al-Adha (varies)"],
-            "average_aqi": 120,
-            "baseline_patients": 340,
-            "surge_data": [
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Food poisoning", "Dysentery", "Cholera"],
-                    "patient_count": 245,
-                    "icu_admissions": 28,
-                    "primary_cause": "Monsoon onset, contaminated water, Eid meat consumption"
-                },
-                {
-                    "disease_category": "infectious",
-                    "conditions": ["Dengue early cases", "Malaria", "Leptospirosis"],
-                    "patient_count": 180,
-                    "icu_admissions": 32,
-                    "primary_cause": "Early monsoon, mosquito breeding in stagnant water"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Drowning", "Electrocution", "Flood injuries"],
-                    "patient_count": 90,
-                    "icu_admissions": 25,
-                    "primary_cause": "Heavy monsoon rains, waterlogging, flooding"
-                }
-            ],
-            "total_surge_patients": 515,
-            "notes": "Monsoon begins. Stock anti-malarial and dengue testing kits."
-        },
-        
-        7: {  # July
-            "month": "July",
-            "festivals": ["Rath Yatra", "Guru Purnima"],
-            "average_aqi": 95,
-            "baseline_patients": 380,
-            "surge_data": [
-                {
-                    "disease_category": "infectious",
-                    "conditions": ["Dengue", "Malaria", "Typhoid", "Hepatitis A"],
-                    "patient_count": 485,
-                    "icu_admissions": 65,
-                    "oxygen_cylinders_used": 85,
-                    "primary_cause": "Peak monsoon, waterborne diseases, vector-borne diseases"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Cholera", "Acute diarrhea", "Dysentery"],
-                    "patient_count": 310,
-                    "icu_admissions": 42,
-                    "primary_cause": "Contaminated water sources, flooding"
-                },
-                {
-                    "disease_category": "respiratory",
-                    "conditions": ["Pneumonia", "Tuberculosis flare-ups"],
-                    "patient_count": 195,
-                    "icu_admissions": 38,
-                    "oxygen_cylinders_used": 95,
-                    "primary_cause": "Humidity, dampness, monsoon-related respiratory issues"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Crowd injuries", "Stampede victims"],
-                    "patient_count": 125,
-                    "icu_admissions": 30,
-                    "primary_cause": "Rath Yatra processions in Puri, massive crowds"
-                }
-            ],
-            "total_surge_patients": 1115,
-            "notes": "CRITICAL: Peak monsoon disease surge. Highest infectious disease load of the year."
-        },
-        
-        8: {  # August
-            "month": "August",
-            "festivals": ["Raksha Bandhan", "Janmashtami", "Independence Day"],
-            "average_aqi": 110,
-            "baseline_patients": 390,
-            "surge_data": [
-                {
-                    "disease_category": "infectious",
-                    "conditions": ["Dengue", "Malaria", "Chikungunya"],
-                    "patient_count": 445,
-                    "icu_admissions": 58,
-                    "oxygen_cylinders_used": 75,
-                    "primary_cause": "Continued monsoon, peak mosquito season"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Food poisoning", "Gastroenteritis"],
-                    "patient_count": 220,
-                    "icu_admissions": 25,
-                    "primary_cause": "Festival food during Janmashtami, monsoon contamination"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Fall injuries", "Fractures", "Head trauma"],
-                    "patient_count": 165,
-                    "icu_admissions": 42,
-                    "primary_cause": "Dahi Handi (human pyramid) events during Janmashtami"
-                }
-            ],
-            "total_surge_patients": 830,
-            "notes": "Janmashtami Dahi Handi causes predictable trauma surge in Maharashtra."
-        },
-        
-        9: {  # September
-            "month": "September",
-            "festivals": ["Ganesh Chaturthi", "Onam"],
-            "average_aqi": 135,
-            "baseline_patients": 410,
-            "surge_data": [
-                {
-                    "disease_category": "infectious",
-                    "conditions": ["Dengue", "Malaria", "Leptospirosis"],
-                    "patient_count": 395,
-                    "icu_admissions": 52,
-                    "oxygen_cylinders_used": 68,
-                    "primary_cause": "Late monsoon, post-flood infections"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Drowning", "Crowd injuries", "Electrocution"],
-                    "patient_count": 245,
-                    "icu_admissions": 68,
-                    "primary_cause": "Ganesh idol immersion in rivers/sea, massive crowds"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Food poisoning", "Diarrhea"],
-                    "patient_count": 185,
-                    "icu_admissions": 20,
-                    "primary_cause": "Prasad distribution, festival meals"
-                },
-                {
-                    "disease_category": "respiratory",
-                    "conditions": ["Asthma", "Allergies"],
-                    "patient_count": 140,
-                    "icu_admissions": 18,
-                    "oxygen_cylinders_used": 45,
-                    "primary_cause": "Idol immersion dust, post-monsoon humidity"
-                }
-            ],
-            "total_surge_patients": 965,
-            "notes": "HIGH ALERT: Ganesh Chaturthi causes multi-day surge, especially in Maharashtra."
-        },
-        
-        10: {  # October
-            "month": "October",
-            "festivals": ["Navratri", "Durga Puja", "Dussehra"],
-            "average_aqi": 220,
-            "baseline_patients": 430,
-            "surge_data": [
-                {
-                    "disease_category": "respiratory",
-                    "conditions": ["Asthma", "COPD", "Bronchitis"],
-                    "patient_count": 595,
-                    "icu_admissions": 72,
-                    "oxygen_cylinders_used": 185,
-                    "primary_cause": "Post-monsoon pollution rise, crop burning begins, festival firecrackers"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Firecracker burns", "Road accidents", "Garba-related injuries"],
-                    "patient_count": 285,
-                    "icu_admissions": 55,
-                    "primary_cause": "Dussehra firecrackers, Navratri night-long Garba dances, Ravana effigy burns"
-                },
-                {
-                    "disease_category": "infectious",
-                    "conditions": ["Dengue late cases", "Viral fever"],
-                    "patient_count": 180,
-                    "icu_admissions": 28,
-                    "primary_cause": "Dengue season tail-end, weather transition"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Food poisoning"],
-                    "patient_count": 155,
-                    "icu_admissions": 15,
-                    "primary_cause": "Festival fasting followed by heavy meals, street food"
-                }
-            ],
-            "total_surge_patients": 1215,
-            "notes": "VERY HIGH: Navratri + Durga Puja + pollution = major surge. Prepare burn units."
-        },
-        
-        11: {  # November
-            "month": "November",
-            "festivals": ["Diwali", "Chhath Puja", "Guru Nanak Jayanti"],
-            "average_aqi": 380,
-            "baseline_patients": 460,
-            "surge_data": [
-                {
-                    "disease_category": "respiratory",
-                    "conditions": ["Asthma", "COPD", "Acute bronchitis", "Pneumonia", "Respiratory failure"],
-                    "patient_count": 1050,
-                    "icu_admissions": 145,
-                    "oxygen_cylinders_used": 420,
-                    "primary_cause": "CRITICAL AQI (400-500), Diwali firecrackers, winter smog, crop burning peak"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Firecracker burns", "Eye injuries", "Blast injuries", "Road accidents"],
-                    "patient_count": 485,
-                    "icu_admissions": 98,
-                    "primary_cause": "Diwali firecrackers, drunk driving post-parties"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Food poisoning", "Acute gastritis"],
-                    "patient_count": 240,
-                    "icu_admissions": 28,
-                    "primary_cause": "Festival sweets, heavy oil-rich food, overeating"
-                },
-                {
-                    "disease_category": "cardiac",
-                    "conditions": ["Heart attacks", "Angina", "Cardiac arrest"],
-                    "patient_count": 165,
-                    "icu_admissions": 85,
-                    "primary_cause": "Air pollution triggering cardiac events, stress, overeating"
-                }
-            ],
-            "total_surge_patients": 1940,
-            "notes": "🚨 EXTREME ALERT: Diwali = worst surge of year. Triple oxygen stock. All-hands-on-deck."
-        },
-        
-        12: {  # December
-            "month": "December",
-            "festivals": ["Christmas"],
-            "average_aqi": 320,
-            "baseline_patients": 440,
-            "surge_data": [
-                {
-                    "disease_category": "respiratory",
-                    "conditions": ["Bronchitis", "Pneumonia", "COPD", "Cold", "Flu"],
-                    "patient_count": 795,
-                    "icu_admissions": 98,
-                    "oxygen_cylinders_used": 285,
-                    "primary_cause": "Winter pollution continues, cold weather, fog, smog"
-                },
-                {
-                    "disease_category": "cardiac",
-                    "conditions": ["Heart attacks", "Hypothermia-induced cardiac issues"],
-                    "patient_count": 145,
-                    "icu_admissions": 72,
-                    "primary_cause": "Cold stress on heart, pollution-related cardiac events"
-                },
-                {
-                    "disease_category": "accident",
-                    "conditions": ["Road accidents", "Alcohol poisoning"],
-                    "patient_count": 185,
-                    "icu_admissions": 45,
-                    "primary_cause": "New Year's Eve parties, drunk driving"
-                },
-                {
-                    "disease_category": "gastro",
-                    "conditions": ["Food poisoning"],
-                    "patient_count": 110,
-                    "icu_admissions": 12,
-                    "primary_cause": "Christmas parties, holiday food"
-                }
-            ],
-            "total_surge_patients": 1235,
-            "notes": "HIGH: Winter pollution + festivals. Year-end surge continuing from November."
-        }
-    }
-    
-    # Filter by month if specified
-    if month is not None:
-        if month < 1 or month > 12:
-            return {"error": "Invalid month. Please provide a value between 1-12."}
-        data = {month: historical_data[month]}
-    else:
-        data = historical_data
-    
-    # Filter by disease type if specified
-    if disease_type and disease_type != "all":
-        filtered_data = {}
-        for m, month_data in data.items():
-            filtered_surge = [
-                surge for surge in month_data["surge_data"]
-                if surge["disease_category"] == disease_type
-            ]
-            if filtered_surge:
-                filtered_month_data = month_data.copy()
-                filtered_month_data["surge_data"] = filtered_surge
-                filtered_data[m] = filtered_month_data
-        data = filtered_data
-    
-    # Add summary statistics
-    summary = {
-        "total_months_analyzed": len(data),
-        "highest_surge_month": max(data.items(), key=lambda x: x[1]["total_surge_patients"])[1]["month"],
-        "highest_surge_count": max(x["total_surge_patients"] for x in data.values()),
-        "critical_alert_months": [
-            month_data["month"] for month_data in data.values() 
-            if month_data["total_surge_patients"] > 1000
-        ],
-        "data_source": "Historical records from 2020-2024 across major Indian metro hospitals",
-        "last_updated": "2024"
-    }
-    
-    return {
-        "summary": summary,
-        "historical_data": data,
-        "prediction_notes": [
-            "Diwali (November) and Holi (March) cause highest multi-category surges",
-            "Monsoon months (July-September) dominated by infectious diseases",
-            "Winter months (November-February) show respiratory disease peaks due to pollution",
-            "Festival-related accidents are highly predictable and preventable",
-            "AQI above 300 correlates with 100%+ respiratory surge"
+
+    def predict_from_features(features, baseline=150, surge_threshold=184, return_json=True):
+        """
+        Make prediction directly from feature dictionary
+
+        Args:
+            features: Dictionary with feature values. Required keys:
+                - temperature (float): Temperature in Celsius
+                - air_quality (float): Air Quality Index (0-500)
+                - admissions_lag1 (float): Yesterday's admissions
+                - admissions_lag7 (float): Admissions from 7 days ago
+                - admissions_rolling7 (float): 7-day rolling average
+                - admissions_rolling7_std (float): 7-day rolling std dev
+                - temp_change_1d (float): Temperature change from yesterday
+                - aqi_change_1d (float): AQI change from yesterday
+                - er_admissions (float): Recent ER admissions
+                - icu_admissions (float): Recent ICU admissions
+                - day_of_week (int): 0=Monday, 6=Sunday
+                - month (int): 1-12
+                - is_weekend (int): 0 or 1
+            baseline (float): Historical average admissions (for comparison)
+            surge_threshold (float): Admission level considered a surge
+            return_json (bool): Return JSON string vs dict
+
+        Returns:
+            Prediction with SHAP explanations as JSON string or dict
+
+        Example:
+            features = {
+                'temperature': 5.0,
+                'air_quality': 185.0,
+                'admissions_lag1': 165.0,
+                'admissions_lag7': 158.0,
+                'admissions_rolling7': 162.5,
+                'admissions_rolling7_std': 12.3,
+                'temp_change_1d': -8.0,
+                'aqi_change_1d': 25.0,
+                'er_admissions': 58.0,
+                'icu_admissions': 18.0,
+                'day_of_week': 4,  # Friday
+                'month': 12,        # December
+                'is_weekend': 0
+            }
+            result = predict_from_features(features)
+        """
+
+        print("=" * 80)
+        print("DIRECT PREDICTION FROM FEATURES")
+        print("=" * 80)
+
+        # ===== STEP 1: LOAD MODEL =====
+        print("\n[1/4] Loading model...")
+        try:
+            pred_model = joblib.load('./multi_tool_agent/hospital_surge_model.pkl')
+            scaler = joblib.load('./multi_tool_agent/feature_scaler.pkl')
+            print(f"  ✓ Model loaded: {type(pred_model).__name__}")
+        except Exception as e:
+            print(f"  ✗ Error loading model: {e}")
+            print("  Make sure hospital_surge_model.pkl and feature_scaler.pkl exist")
+            return None
+
+        # ===== STEP 2: VALIDATE AND ENGINEER FEATURES =====
+        print("\n[2/4] Processing features...")
+
+        # Required base features
+        required_features = [
+            'temperature', 'air_quality', 'admissions_lag1', 'admissions_lag7',
+            'admissions_rolling7', 'admissions_rolling7_std', 'temp_change_1d',
+            'aqi_change_1d', 'er_admissions', 'icu_admissions',
+            'day_of_week', 'month', 'is_weekend'
         ]
-    }
+
+        # Check for missing features
+        missing = [f for f in required_features if f not in features]
+        if missing:
+            print(f"  ✗ Missing required features: {missing}")
+            return None
+
+        # Create feature dictionary with all engineered features
+        processed_features = features.copy()
+
+        # Engineer additional features
+        processed_features['temp_squared'] = features['temperature'] ** 2
+        processed_features['rolling_trend'] = features['admissions_rolling7'] - features['admissions_lag7']
+
+        # Cyclical encoding for day of week
+        processed_features['day_of_week_sin'] = np.sin(2 * np.pi * features['day_of_week'] / 7)
+        processed_features['day_of_week_cos'] = np.cos(2 * np.pi * features['day_of_week'] / 7)
+
+        # Cyclical encoding for month
+        processed_features['month_sin'] = np.sin(2 * np.pi * features['month'] / 12)
+        processed_features['month_cos'] = np.cos(2 * np.pi * features['month'] / 12)
+
+        # Define feature order (must match training)
+        feature_cols = [
+            'day_of_week', 'month', 'is_weekend',
+            'temperature', 'temp_squared', 'air_quality',
+            'admissions_lag1', 'admissions_lag7', 'admissions_rolling7',
+            'admissions_rolling7_std', 'temp_change_1d', 'aqi_change_1d',
+            'rolling_trend', 'er_admissions', 'icu_admissions',
+            'day_of_week_sin', 'day_of_week_cos', 'month_sin', 'month_cos'
+        ]
+
+        # Create feature array
+        X = np.array([[processed_features[col] for col in feature_cols]])
+        X_df = pd.DataFrame(X, columns=feature_cols)
+
+        print(f"  ✓ Processed {len(feature_cols)} features")
+
+        # ===== STEP 3: MAKE PREDICTION =====
+        print("\n[3/4] Generating prediction...")
+
+        try:
+            # Use scaler only if model is Linear Regression
+            prediction = pred_model.predict(X_df)[0]
+
+            is_surge = prediction > surge_threshold
+
+            print(f"  ✓ Predicted admissions: {prediction:.1f}")
+            print(f"  ✓ Baseline: {baseline:.1f}")
+            print(f"  ✓ Difference: {prediction - baseline:+.1f}")
+            print(f"  ✓ Surge alert: {'🚨 YES' if is_surge else '✓ No'}")
+        except Exception as e:
+            print(f"  ✗ Error making prediction: {e}")
+            return None
+
+        # ===== STEP 4: CALCULATE SHAP VALUES =====
+        print("\n[4/4] Calculating SHAP explanations...")
+
+        try:
+            import shap
+
+            # For tree-based models
+            explainer = shap.TreeExplainer(pred_model)
+            shap_values = explainer.shap_values(X_df)[0]
+
+            print(f"  ✓ SHAP values calculated")
+            has_shap = True
+
+        except ImportError:
+            print("  ⚠ SHAP not installed - prediction without explanations")
+            print("    Install with: pip install shap")
+            shap_values = None
+            has_shap = False
+        except Exception as e:
+            print(f"  ⚠ Error calculating SHAP: {e}")
+            shap_values = None
+            has_shap = False
+
+        # ===== BUILD OUTPUT =====
+        print("\nBuilding output...")
+
+        # Build feature contributions
+        if shap_values is not None:
+            feature_impacts = []
+            for i, (feature_name, shap_val) in enumerate(zip(feature_cols, shap_values)):
+                feature_impacts.append({
+                    'feature': feature_name,
+                    'value': float(X_df[feature_name].iloc[0]),
+                    'shap_value': float(shap_val),
+                    'abs_shap': abs(float(shap_val))
+                })
+
+            # Sort by absolute SHAP value
+            feature_impacts.sort(key=lambda x: x['abs_shap'], reverse=True)
+
+            # Separate positive and negative
+            top_positive = [f for f in feature_impacts if f['shap_value'] > 0][:5]
+            top_negative = [f for f in feature_impacts if f['shap_value'] < 0][:5]
+
+            # Add human-readable reasons
+            def get_reason(feature, value, impact):
+                reasons = {
+                    'air_quality': f"AQI of {value:.0f} {'worsens' if value > 100 else 'improves'} respiratory admissions",
+                    'temperature': f"Temperature at {value:.1f}°C affects weather-related cases",
+                    'temp_change_1d': f"Temperature {'dropped' if value < 0 else 'rose'} by {abs(value):.1f}°C from yesterday",
+                    'aqi_change_1d': f"Air quality {'worsened' if value > 0 else 'improved'} by {abs(value):.0f} points",
+                    'admissions_lag1': f"Yesterday's {value:.0f} admissions set baseline",
+                    'admissions_lag7': f"Last week: {value:.0f} admissions",
+                    'admissions_rolling7': f"7-day average: {value:.1f} admissions",
+                    'admissions_rolling7_std': f"Recent volatility: {value:.1f} std dev",
+                    'rolling_trend': f"Week-over-week trend: {value:+.1f} admissions",
+                    'er_admissions': f"ER volume: {value:.0f}",
+                    'icu_admissions': f"ICU census: {value:.0f}",
+                    'is_weekend': f"{'Weekend' if value == 1 else 'Weekday'} pattern",
+                    'temp_squared': f"Temperature non-linearity effect",
+                    'month': f"Month {int(value)} seasonality",
+                    'day_of_week': f"Day {int(value)} weekly pattern",
+                }
+                return reasons.get(feature, f"{feature}: {value:.2f}")
+
+            formatted_positive = [
+                {
+                    'feature': f['feature'],
+                    'value': round(f['value'], 2),
+                    'impact': round(f['shap_value'], 2),
+                    'reason': get_reason(f['feature'], f['value'], f['shap_value'])
+                }
+                for f in top_positive
+            ]
+
+            formatted_negative = [
+                {
+                    'feature': f['feature'],
+                    'value': round(f['value'], 2),
+                    'impact': round(f['shap_value'], 2),
+                    'reason': get_reason(f['feature'], f['value'], f['shap_value'])
+                }
+                for f in top_negative
+            ]
+
+            base_value = explainer.expected_value if hasattr(explainer, 'expected_value') else baseline
+
+        else:
+            formatted_positive = []
+            formatted_negative = []
+            base_value = baseline
+            feature_impacts = []
+
+        # Build output structure
+        output = {
+            'predicted_admissions': round(float(prediction), 1),
+            'baseline_average': round(float(baseline), 1),
+            'difference_from_baseline': round(float(prediction - baseline), 1),
+            'surge_alert': bool(is_surge),
+            'surge_threshold': round(float(surge_threshold), 1),
+            'confidence': 'high' if has_shap and len(top_positive) >= 3 else 'moderate',
+            'top_positive_factors': formatted_positive,
+            'top_negative_factors': formatted_negative,
+            'shap_metadata': {
+                'base_value': round(float(base_value), 2) if has_shap else None,
+                'total_positive_impact': round(sum(f['shap_value'] for f in feature_impacts if f['shap_value'] > 0),
+                                               2) if has_shap else None,
+                'total_negative_impact': round(sum(f['shap_value'] for f in feature_impacts if f['shap_value'] < 0),
+                                               2) if has_shap else None,
+                'shap_available': has_shap
+            },
+            'input_features': {k: round(float(v), 2) if isinstance(v, (int, float)) else v
+                               for k, v in features.items()},
+            'all_shap_values': {
+                feature_cols[i]: round(float(shap_values[i]), 3)
+                for i in range(len(feature_cols))
+            } if has_shap else None,
+            'model_info': {
+                'model_type': type(pred_model).__name__,
+                'prediction_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+        }
+
+        # Display summary
+        print("\n" + "=" * 80)
+        print("PREDICTION RESULTS")
+        print("=" * 80)
+        print(f"Predicted Admissions: {output['predicted_admissions']:.1f}")
+        print(f"Baseline: {output['baseline_average']:.1f}")
+        print(f"Difference: {output['difference_from_baseline']:+.1f}")
+        print(f"Surge Alert: {'🚨 YES - Prepare for high volume!' if is_surge else '✓ No surge expected'}")
+
+        if formatted_positive:
+            print(f"\n📈 Top Factors INCREASING Admissions:")
+            for i, factor in enumerate(formatted_positive[:3], 1):
+                print(f"  {i}. {factor['reason']} (impact: +{factor['impact']:.1f})")
+
+        if formatted_negative:
+            print(f"\n📉 Top Factors DECREASING Admissions:")
+            for i, factor in enumerate(formatted_negative[:3], 1):
+                print(f"  {i}. {factor['reason']} (impact: {factor['impact']:.1f})")
+
+        if return_json:
+            return json.dumps(output, indent=2)
+        else:
+            return output
+
+    # Add summary statistics
+    summary =   {
+              "prediction_summary": {
+                "predicted_admissions": 176.9,
+                "baseline_average": 150.0,
+                "difference_from_baseline": 26.9,
+                "surge_alert": False,
+                "surge_message": "No surge expected"
+              },
+              "top_positive_factors": [
+                {
+                  "rank": 1,
+                  "feature": "month_sin",
+                  "value": -0.00,
+                  "impact": 7.9,
+                  "reason": "month_sin: -0.00"
+                },
+                {
+                  "rank": 2,
+                  "feature": "day_of_week",
+                  "value": 4,
+                  "impact": 4.0,
+                  "reason": "Day 4 weekly pattern"
+                },
+                {
+                  "rank": 3,
+                  "feature": "month_cos",
+                  "value": 1.00,
+                  "impact": 2.9,
+                  "reason": "month_cos: 1.00"
+                }
+              ],
+              "top_negative_factors": [
+                {
+                  "rank": 1,
+                  "feature": "admissions_rolling7",
+                  "value": 165.0,
+                  "impact": -4.6,
+                  "reason": "7-day average: 165.0 admissions"
+                },
+                {
+                  "rank": 2,
+                  "feature": "temperature",
+                  "value": 5.0,
+                  "impact": -1.9,
+                  "reason": "Temperature at 5.0°C affects weather-related cases"
+                },
+                {
+                  "rank": 3,
+                  "feature": "month",
+                  "value": 12,
+                  "impact": -1.3,
+                  "reason": "Month 12 seasonality"
+                }
+              ]
+            }
+    return summary
 
 predictive_agent = LlmAgent(
     model="gemini-2.0-flash",

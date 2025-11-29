@@ -3,7 +3,7 @@ const router = express.Router();
 
 // Configuration for Google ADK Agent
 const ADK_AGENT_URL = process.env.ADK_AGENT_URL || 'http://127.0.0.1:8000';
-const ADK_APP_NAME = process.env.ADK_APP_NAME || 'test-agent-mcp';
+const ADK_APP_NAME = process.env.ADK_APP_NAME || 'multi_tool_agent';
 
 /**
  * Create or get a session for a user
